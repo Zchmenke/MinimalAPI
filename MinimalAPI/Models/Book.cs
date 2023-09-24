@@ -8,5 +8,6 @@
         public string Genre { get; set; }
         public bool Available { get; set; }
         public int ReleaseYear { get; set; }
+      
     }
 }

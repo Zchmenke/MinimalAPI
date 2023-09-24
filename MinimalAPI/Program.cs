@@ -16,6 +16,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IBookRepository<Book>, BookRepository>();
+builder.Services.AddCors((setup) => // add CORS to allow fetching data from another (any) domain
+{
+    setup.AddPolicy("default", (options) =>
+    {
+        options.AllowAnyMethod().AllowAnyHeader().AllowAnyOrigin();
+    });
+});
 
 builder.Services.AddDbContext<DataContext>(options =>
            options.UseSqlServer(builder.Configuration.GetConnectionString("Minimal-Connection")));
@@ -31,11 +38,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("default"); // use cors
 
 
 //Get All Books
 
-app.MapGet("/books", async (IBookRepository<Book> repo) =>
+app.MapGet("/book", async (IBookRepository<Book> repo) =>
 {
     try
     {
@@ -49,20 +57,17 @@ app.MapGet("/books", async (IBookRepository<Book> repo) =>
 });
 
 //Get Book By ID
-app.MapGet("/books/{id}", async (IBookRepository<Book> repo, int id) =>
+app.MapGet("/book/{id}", async (IBookRepository<Book> repo, int id) =>
     {
-        var book = await repo.GetBookById(id);
+        
         try
         {
-            if (book == null)
-            {
-                return Results.NotFound("Book with this ID does not exist in the database.");
-            }
+            var book = await repo.GetBookById(id);
             return Results.Ok(book);
         }
         catch (Exception)
         {
-            return Results.StatusCode(500);
+            return Results.NotFound();
         }
     });
 //Add Book
@@ -125,11 +130,11 @@ app.MapDelete("/book/{id}", async (IBookRepository<Book> repo, int id) =>
     }
   
 });
-app.MapGet("/bookSearch/{string}", async (IBookRepository<Book> repo,string keyWord) =>
+app.MapGet("/book/search", async (IBookRepository<Book> repo,string searchString) =>
 {
     try
     {      
-        var tempList = await repo.SearchForBook(keyWord);
+        var tempList = await repo.SearchForBook(searchString);
         if (tempList == null)
         {
             return Results.StatusCode(404);

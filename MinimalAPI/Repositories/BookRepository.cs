@@ -65,7 +65,9 @@ namespace MinimalAPI.Repositories
                 .Where(b => b.Author.ToLower()
                 .Contains(keyWord) ||
                 b.Title.ToLower()
-                .Contains(keyWord)).ToListAsync();
+                .Contains(keyWord) ||
+                b.Genre.ToLower() == keyWord)
+                .ToListAsync();
 
             if (tempList.Count == 0)
             {
